@@ -23,18 +23,29 @@ const VideoGenerator: React.FC = () => {
     prompt: '',
     model: 'veo3_fast',
     aspectRatio: '16:9',
-    filename: 'generated_video.mp4'
+    filename: 'generated_video.mp4',
+    apiKey: localStorage.getItem('veo3_api_key') || ''
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedVideo, setGeneratedVideo] = useState<VideoGenerationResponse | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Save API key to localStorage
+    if (field === 'apiKey') {
+      localStorage.setItem('veo3_api_key', value);
+    }
   };
 
   const handleGenerate = async () => {
     if (!formData.prompt.trim()) {
       toast.error('Please enter a video prompt');
+      return;
+    }
+
+    if (!formData.apiKey.trim()) {
+      toast.error('Please enter your VEO3 API Key');
       return;
     }
 
@@ -146,6 +157,31 @@ const VideoGenerator: React.FC = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="apiKey" className="text-foreground font-medium">
+                VEO3 API Key *
+              </Label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="Enter your VEO3 API key"
+                value={formData.apiKey}
+                onChange={(e) => handleInputChange('apiKey', e.target.value)}
+                className="bg-muted/50 border-primary/30 focus:border-primary focus:shadow-neon/50 transition-all duration-300"
+              />
+              <p className="text-xs text-muted-foreground">
+                Get your API key from{' '}
+                <a 
+                  href="https://veo3api.ai/api-key" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 underline"
+                >
+                  veo3api.ai/api-key
+                </a>
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="filename" className="text-foreground font-medium">
                 Filename
               </Label>
@@ -160,7 +196,7 @@ const VideoGenerator: React.FC = () => {
 
             <Button
               onClick={handleGenerate}
-              disabled={isGenerating || !formData.prompt.trim()}
+              disabled={isGenerating || !formData.prompt.trim() || !formData.apiKey.trim()}
               variant="neon"
               size="lg"
               className="w-full"
